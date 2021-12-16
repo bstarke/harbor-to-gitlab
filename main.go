@@ -75,7 +75,7 @@ func createEvent(c *gin.Context) {
 }
 
 func triggerPipeline(project string, ref string, token string, imageSha string) {
-	url := fmt.Sprintf(baseGitUrl, project, ref, token)
+	url := fmt.Sprintf(baseGitUrl, project, ref, token, imageSha)
 	log.Printf("url = %s", url)
 	resp, err := http.Post(url, "text/plain", nil)
 	if err != nil {
