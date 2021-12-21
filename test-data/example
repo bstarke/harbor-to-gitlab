@@ -1,0 +1,5 @@
+{
+	"token": "gitlab pipeline trigger token",
+	"projectId": "gitlab project id (numeric)",
+	"ref": "main or other git ref(branch, tag, etc)"
+}

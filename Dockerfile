@@ -7,9 +7,7 @@ COPY . .
 
 RUN apk update && \
     apk add git && \
-    export GIT_COMMIT=$(git rev-list -1 HEAD) && \
-    export BUILD_TIME=$(date --utc +%FT%TZ) && \
-    GOOS=linux CGO_ENABLED=0 go build -mod vendor -a -installsuffix cgo -ldflags="-X main.GitHash=$GIT_COMMIT -X main.GoVer=$GOLANG_VERSION -X main.BuildTime=$BUILD_TIME -w -s" -o app
+    GOOS=linux CGO_ENABLED=0 go build -mod vendor -a -installsuffix cgo -ldflags="-X main.GoVer=$GOLANG_VERSION -w -s" -o app
 
 #Non Root User Configuration
 RUN addgroup -S -g 10001 appGrp \

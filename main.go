@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -11,22 +13,24 @@ import (
 )
 
 var version Version
-var GitHash string
-var BuildTime string
 var GoVer string
 
 //change this or set it in Environment variable `BASE_GIT_URL` URL must have 3 instances of %s for code to work
-var baseGitUrl string = "https://host.domain.com/api/v4/projects/%s/ref/%s/trigger/pipeline?token=%s&variables[IMAGE_SHA]=%s"
+var baseGitUrl string = "https://git.home.starkenberg.net/api/v4/projects/%s/ref/%s/trigger/pipeline?token=%s&variables[IMAGE_SHA]=%s"
 
 type Version struct {
-	GitCommit  string
 	ApiVersion string
 	GoVersion  string
-	BuildDate  string
+}
+
+type ProjectMetaData struct {
+	Token     string `json:"token"`
+	ProjectID string `json:"projectId"`
+	Ref       string `json:"ref"`
 }
 
 func main() {
-	version = Version{GitCommit: GitHash, ApiVersion: "1.0.0", BuildDate: BuildTime, GoVersion: GoVer}
+	version = Version{ApiVersion: "1.0.0", GoVersion: GoVer}
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -58,12 +62,14 @@ func createEvent(c *gin.Context) {
 	var hook HarborHook
 	if c.ShouldBind(&hook) == nil {
 		log.Printf("Hook : %+v", hook)
-		//TODO Filter and figure out which pipeline to trigger
-		token := "your_token"     //gitlab pipeline trigger token (may want to make this a lookup or environment)
-		project := "your_project" //gitlab project (may want to make this a lookup or environment)
-		ref := "main"             //gitlab ref (may want to make this a lookup or environment)
-		//TODO end
-		triggerPipeline(project, ref, token, hook.EventData.Resources[0].Digest)
+		project, err := readMetaData(hook.EventData.Repository.Name)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err,
+			})
+			return
+		}
+		triggerPipeline(project, hook.EventData.Resources[0].Digest)
 		c.JSON(http.StatusCreated, gin.H{
 			"created": "true",
 		})
@@ -74,8 +80,8 @@ func createEvent(c *gin.Context) {
 	}
 }
 
-func triggerPipeline(project string, ref string, token string, imageSha string) {
-	url := fmt.Sprintf(baseGitUrl, project, ref, token, imageSha)
+func triggerPipeline(project ProjectMetaData, imageSha string) {
+	url := fmt.Sprintf(baseGitUrl, project.ProjectID, project.Ref, project.Token, imageSha)
 	log.Printf("url = %s", url)
 	resp, err := http.Post(url, "text/plain", nil)
 	if err != nil {
@@ -88,4 +94,17 @@ func triggerPipeline(project string, ref string, token string, imageSha string) 
 	} else {
 		fmt.Printf("%s sent to api\n", imageSha)
 	}
+}
+
+func readMetaData(serviceName string) (data ProjectMetaData, err error) {
+	file, err := ioutil.ReadFile(fmt.Sprintf("/etc/secrets/%s", serviceName))
+	if err != nil {
+		log.Printf("Error reading %s secrets file : %s", serviceName, err)
+		return
+	}
+	err = json.Unmarshal([]byte(file), &data)
+	if err != nil {
+		log.Printf("Error parsing %s secrets file : %s", serviceName, err)
+	}
+	return
 }
