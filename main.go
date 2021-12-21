@@ -16,7 +16,7 @@ var version Version
 var GoVer string
 
 //change this or set it in Environment variable `BASE_GIT_URL` URL must have 3 instances of %s for code to work
-var baseGitUrl string = "https://git.home.starkenberg.net/api/v4/projects/%s/ref/%s/trigger/pipeline?token=%s&variables[IMAGE_SHA]=%s"
+var baseGitUrl = "https://git.home.starkenberg.net/api/v4/projects/%s/ref/%s/trigger/pipeline?token=%s&variables[IMAGE_SHA]=%s"
 
 type Version struct {
 	ApiVersion string

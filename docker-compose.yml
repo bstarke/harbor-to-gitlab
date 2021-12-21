@@ -2,7 +2,7 @@ version: "3.9"
 services:
   harbor-to-gitlab:
     container_name: harbor2git
-    image: test-hgo
+    image: harbor2git
     ports:
       - "8080:8080"
     volumes:

@@ -1,5 +1,5 @@
 # project.toml
 [ build ]
   [[ build.env ]]
-    name="BP_GO_BUILD_LDFLAGS"
-    value="-X main.GoVer=$BP_GO_VERSION -w -s"
+    name="BP_GO_VERSION"
+    value="1.17.5"
