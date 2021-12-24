@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  repository: harbor.home.starkenberg.net/library/harbor-2-gitlab
+  pullPolicy: Always
+  # Overrides the image tag whose default is the golangweb appVersion.
+  tag: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+
+securityContext:
+   capabilities:
+     drop:
+     - ALL
+   readOnlyRootFilesystem: true
+   runAsNonRoot: true
+   runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: ""
+  hosts:
+    - host: harbor2git.k8s.starkenberg.net
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: tls-secret
+      hosts:
+        - harbor2git.k8s.starkenberg.net
+
+resources:
+   limits:
+     cpu: 20m
+     memory: 32Mi
+   requests:
+     cpu: 10m
+     memory: 16Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
