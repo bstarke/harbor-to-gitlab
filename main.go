@@ -16,7 +16,7 @@ var version Version
 var GoVer string
 
 //change this or set it in Environment variable `BASE_GIT_URL` URL must have 3 instances of %s for code to work
-var baseGitUrl = "https://git.home.starkenberg.net/api/v4/projects/%s/ref/%s/trigger/pipeline?token=%s&variables[IMAGE_SHA]=%s"
+var baseGitUrl = "https://git.home.starkenberg.net/api/v4/projects/%s/ref/%s/trigger/pipeline?token=%s&variables[IMAGE_TAG]=%s"
 
 type Version struct {
 	ApiVersion string
@@ -30,7 +30,7 @@ type ProjectMetaData struct {
 }
 
 func main() {
-	version = Version{ApiVersion: "1.0.0", GoVersion: GoVer}
+	version = Version{ApiVersion: "1.0.1", GoVersion: GoVer}
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -69,7 +69,7 @@ func createEvent(c *gin.Context) {
 			})
 			return
 		}
-		triggerPipeline(project, hook.EventData.Resources[0].Digest)
+		triggerPipeline(project, hook.EventData.Resources[0].Tag)
 		c.JSON(http.StatusCreated, gin.H{
 			"created": "true",
 		})
@@ -80,19 +80,19 @@ func createEvent(c *gin.Context) {
 	}
 }
 
-func triggerPipeline(project ProjectMetaData, imageSha string) {
-	url := fmt.Sprintf(baseGitUrl, project.ProjectID, project.Ref, project.Token, imageSha)
+func triggerPipeline(project ProjectMetaData, imageTag string) {
+	url := fmt.Sprintf(baseGitUrl, project.ProjectID, project.Ref, project.Token, imageTag)
 	log.Printf("url = %s", url)
 	resp, err := http.Post(url, "text/plain", nil)
 	if err != nil {
-		log.Printf("Error posting to API : %s -> %s", imageSha, err)
+		log.Printf("Error posting to API : %s -> %s", imageTag, err)
 		return
 	}
 	if resp.StatusCode != 201 {
-		log.Printf("Error posting to API : %s", imageSha)
+		log.Printf("Error posting to API : %s", imageTag)
 		log.Printf("Status Code : %d", resp.StatusCode)
 	} else {
-		fmt.Printf("%s sent to api\n", imageSha)
+		fmt.Printf("%s sent to api\n", imageTag)
 	}
 }
 

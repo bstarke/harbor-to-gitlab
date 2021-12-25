@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: harbor.home.starkenberg.net/library/harbor-2-gitlab
+  repository: harbor.home.starkenberg.net/library/harbor-to-gitlab
   pullPolicy: Always
   # Overrides the image tag whose default is the golangweb appVersion.
   tag: ""
